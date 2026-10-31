@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cómo decide una IA real si va «blanca» o «blanco» · Atlas de la Mente</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap">
+<style>
+:root{--bg:#EDF0F7;--ink:#161C36;--mut:#5E668A;--line:#C3C9DE;--acc:#4A3FD6;--amb:#B87A00;--card:#F7F8FC;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1325;--ink:#E7EAF7;--mut:#98A0C4;--line:#2B3560;--acc:#9A92FF;--amb:#F2B83B;--card:#151C35;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1325;--ink:#E7EAF7;--mut:#98A0C4;--line:#2B3560;--acc:#9A92FF;--amb:#F2B83B;--card:#151C35;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:44rem;margin:0 auto;padding:1.25rem 1.25rem 4rem}
+h1,h2,.brand{font-family:Fraunces,Georgia,"Times New Roman",serif;font-weight:700;line-height:1.15}
+.brand{font-size:1rem;color:var(--mut);font-weight:500}
+h1{font-size:clamp(2.1rem,7vw,3.2rem);margin:.6rem 0 1rem;letter-spacing:-.01em}
+h2{font-size:1.5rem;margin:2.6rem 0 .5rem}
+.lead{font-size:1.1rem;max-width:38rem}
+p{max-width:38rem}.mut{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1rem 1.1rem;margin:1.4rem 0}
+label{display:block;margin:.3rem 0 .6rem}
+input[type=range]{width:100%;accent-color:var(--acc)}
+button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:.2rem .65rem;margin:0 .3rem .3rem 0;cursor:pointer}
+button[aria-pressed=true]{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+svg{display:block;width:100%;height:auto}
+#circ{max-width:380px;margin:.4rem auto}
+text{font-family:system-ui,sans-serif}
+.foot{border-top:1px solid var(--line);margin-top:3rem;padding-top:1rem;color:var(--mut);font-size:.95rem}
+</style></head><body><main>
+<div class="brand">Atlas de la Mente</div>
+<h1>Cómo decide una IA real si va «blanca» o «blanco»</h1>
+<p class="lead">Le damos a un modelo de lenguaje real, Qwen2.5-1.5B, frases como «Mi casa es…» y miramos si sigue con «nueva» o «nuevo». Después lo abrimos para ver dónde guarda el género del sustantivo y cuándo se lo pasa a la palabra siguiente.</p>
+<h2>Lo que hace</h2>
+<svg id="beh" viewBox="0 0 600 300" role="img" aria-label="Preferencia del modelo por femenino o masculino en cada sustantivo"></svg>
+<p id="bcap"></p>
+<h2>Dónde guarda el género</h2>
+<p>Tomamos dos frases, una con un sustantivo femenino y otra con uno masculino. En la segunda sustituimos, en una capa y una palabra concretas, lo que el modelo tiene en la cabeza por lo que tenía con la primera. Lo que se recupera de la respuesta nos dice cuánto de la decisión estaba ahí.</p>
+<section class="card" aria-label="Explorador de capas">
+<label>Capa: <b id="lv"></b><input id="ly" type="range" min="0" max="27" value="20"></label>
+<svg id="pt" viewBox="0 0 600 240" role="img" aria-label="Dónde está la decisión en cada capa"></svg>
+<p id="pn" aria-live="polite"></p>
+</section>
+<p id="pcap"></p>
+<h2>¿Se puede leer el género?</h2>
+<p>Entrenamos un clasificador sencillo para adivinar el género a partir de lo que el modelo tiene en el sustantivo, capa a capa. Solo lo entrenamos con palabras regulares (-a femenino, -o masculino) y lo probamos también con las trampa, para ver si lee el género o solo la terminación.</p>
+<svg id="pb" viewBox="0 0 600 245" role="img" aria-label="Acierto del clasificador por capa"></svg>
+<p id="bpcap"></p>
+<p class="foot">El método (parchear activaciones y sondear) es el habitual, y hay un estudio parecido sobre la concordancia sujeto-verbo en español e inglés (Ferrando y Costa-jussà, 2024). Aquí lo aplicamos al género. Límites: un solo modelo, 4 pares de adjetivos, 55 sustantivos y pocos pares válidos para el parcheo. Para que sea un resultado hay que repetirlo con más modelos y palabras. Las capas se numeran desde 0.</p>
+</main><script>
+const D={"model":"Qwen/Qwen2.5-1.5B","layers":28,"pos":["Mi","sustantivo","es"],"adj":[["nueva","nuevo"],["pequeña","pequeño"],["alta","alto"],["buena","bueno"]],"n_pairs":46,"beh":{"regular":0.9523809523809523,"sin sufijo":0.88,"trampa":1.0,"todo":0.9272727272727272},"nouns":[{"w":"casa","g":"f","grp":"regular","ld":-0.21},{"w":"mesa","g":"f","grp":"regular","ld":1.52},{"w":"ventana","g":"f","grp":"regular","ld":1.64},{"w":"playa","g":"f","grp":"regular","ld":0.85},{"w":"carta","g":"f","grp":"regular","ld":2.03},{"w":"plaza","g":"f","grp":"regular","ld":1.18},{"w":"semana","g":"f","grp":"regular","ld":1.5},{"w":"palabra","g":"f","grp":"regular","ld":1.14},{"w":"historia","g":"f","grp":"regular","ld":3.69},{"w":"familia","g":"f","grp":"regular","ld":2.32},{"w":"ciudad","g":"f","grp":"sin sufijo","ld":0.94},{"w":"flor","g":"f","grp":"sin sufijo","ld":-0.17},{"w":"luz","g":"f","grp":"sin sufijo","ld":1.0},{"w":"noche","g":"f","grp":"sin sufijo","ld":2.08},{"w":"razón","g":"f","grp":"sin sufijo","ld":1.46},{"w":"piel","g":"f","grp":"sin sufijo","ld":2.51},{"w":"voz","g":"f","grp":"sin sufijo","ld":2.08},{"w":"paz","g":"f","grp":"sin sufijo","ld":0.94},{"w":"red","g":"f","grp":"sin sufijo","ld":2.15},{"w":"ley","g":"f","grp":"sin sufijo","ld":1.65},{"w":"calle","g":"f","grp":"sin sufijo","ld":1.78},{"w":"carne","g":"f","grp":"sin sufijo","ld":-0.63},{"w":"mujer","g":"f","grp":"sin sufijo","ld":3.06},{"w":"verdad","g":"f","grp":"sin sufijo","ld":-0.39},{"w":"mano","g":"f","grp":"trampa","ld":1.76},{"w":"foto","g":"f","grp":"trampa","ld":1.34},{"w":"moto","g":"f","grp":"trampa","ld":1.0},{"w":"libro","g":"m","grp":"regular","ld":-2.75},{"w":"camino","g":"m","grp":"regular","ld":-3.87},{"w":"mundo","g":"m","grp":"regular","ld":-1.99},{"w":"tiempo","g":"m","grp":"regular","ld":-2.26},{"w":"trabajo","g":"m","grp":"regular","ld":-1.65},{"w":"juego","g":"m","grp":"regular","ld":-2.32},{"w":"puerto","g":"m","grp":"regular","ld":-1.61},{"w":"pelo","g":"m","grp":"regular","ld":-3.69},{"w":"pueblo","g":"m","grp":"regular","ld":-1.8},{"w":"banco","g":"m","grp":"regular","ld":-1.82},{"w":"amigo","g":"m","grp":"regular","ld":-2.56},{"w":"sol","g":"m","grp":"sin sufijo","ld":-2.15},{"w":"tren","g":"m","grp":"sin sufijo","ld":-2.02},{"w":"pan","g":"m","grp":"sin sufijo","ld":-2.67},{"w":"mar","g":"m","grp":"sin sufijo","ld":-1.95},{"w":"país","g":"m","grp":"sin sufijo","ld":-2.42},{"w":"color","g":"m","grp":"sin sufijo","ld":-2.91},{"w":"amor","g":"m","grp":"sin sufijo","ld":-1.48},{"w":"papel","g":"m","grp":"sin sufijo","ld":-2.19},{"w":"motor","g":"m","grp":"sin sufijo","ld":-2.34},{"w":"lugar","g":"m","grp":"sin sufijo","ld":-1.83},{"w":"nombre","g":"m","grp":"sin sufijo","ld":-0.47},{"w":"día","g":"m","grp":"trampa","ld":-2.34},{"w":"mapa","g":"m","grp":"trampa","ld":-2.24},{"w":"problema","g":"m","grp":"trampa","ld":-3.78},{"w":"sistema","g":"m","grp":"trampa","ld":-2.92},{"w":"tema","g":"m","grp":"trampa","ld":-2.09},{"w":"programa","g":"m","grp":"trampa","ld":-2.75}],"patch":[[0.0,1.001,-0.001],[0.0,0.998,0.002],[0.0,1.002,-0.002],[0.0,1.003,-0.003],[0.0,1.001,-0.001],[0.0,1.001,-0.001],[0.0,1.004,-0.004],[0.0,0.994,0.006],[0.0,0.882,0.118],[0.0,0.849,0.151],[0.0,0.839,0.161],[0.0,0.82,0.18],[0.0,0.82,0.18],[0.0,0.823,0.177],[0.0,0.826,0.174],[0.0,0.812,0.188],[0.0,0.809,0.191],[0.0,0.8,0.2],[0.0,0.761,0.239],[0.0,0.746,0.254],[0.0,0.714,0.286],[0.0,0.06,0.94],[0.0,0.048,0.952],[0.0,0.005,0.995],[0.0,-0.0,1.0],[0.0,0.002,0.998],[0.0,0.003,0.997],[0.0,0.0,1.0]],"probe":{"regular":[0.857,1.0,0.571,0.714,0.571,0.714,0.571,0.714,0.429,0.571,0.571,0.714,0.714,0.571,0.571,0.571,0.571,0.714,0.714,0.571,1.0,0.857,0.857,0.857,0.857,0.857,0.857,0.857],"trampa":[0.444,0.444,0.556,0.556,0.667,0.667,0.444,0.778,0.778,0.556,0.556,0.444,0.556,0.556,0.444,0.444,0.444,0.556,0.667,0.556,1.0,0.667,0.667,0.667,0.667,0.778,0.778,0.778],"sin sufijo":[0.4,0.6,0.48,0.48,0.64,0.52,0.6,0.8,0.6,0.6,0.6,0.56,0.64,0.56,0.64,0.72,0.72,0.68,0.68,0.72,0.8,0.64,0.44,0.52,0.48,0.68,0.76,0.6]}},$=i=>document.getElementById(i),pc=x=>Math.round(x*100),NL=D.layers,N=D.nouns,P=D.patch.map(r=>({n:r[1],e:r[2]}));
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length,ok=n=>(n.ld>0)===(n.g==='f'),xL=l=>50+l/(NL-1)*520;
+let jump=1;for(let l=1;l<NL;l++)if(P[l].e-P[l-1].e>P[jump].e-P[jump-1].e)jump=l;
+let full=0;P.forEach((p,l)=>{if(p.n>=.99)full=l});const done=P.findIndex(p=>p.e>=.99);
+function behav(){const R=['regular','sin sufijo','trampa'],T={regular:'regulares (-a, -o)','sin sufijo':'sin sufijo marcado',trampa:'trampa: el sufijo engaña (la mano, el día)'},X=v=>300+v*60;
+let h=`<line x1="300" x2="300" y1="26" y2="266" stroke="var(--mut)" stroke-dasharray="4 4"/><circle cx="330" cy="12" r="5" fill="var(--amb)"/><text x="340" y="16" font-size="12" fill="var(--mut)">femenino</text><circle cx="430" cy="12" r="5" fill="var(--acc)"/><text x="440" y="16" font-size="12" fill="var(--mut)">masculino</text>`;
+R.forEach((g,r)=>{const y=76+r*86;h+=`<text x="20" y="${y-38}" font-size="13" fill="var(--mut)">${T[g]}</text><line x1="40" x2="560" y1="${y}" y2="${y}" stroke="var(--line)"/>`;
+N.filter(n=>n.grp===g).forEach((n,i)=>{const cx=X(Math.max(-4.4,Math.min(4.4,n.ld))),cy=y+((i*7)%5-2)*7,bad=!ok(n);
+h+=`<circle cx="${cx}" cy="${cy}" r="${bad?6:5}" fill="${n.g==='f'?'var(--amb)':'var(--acc)'}"${bad?' stroke="var(--ink)" stroke-width="2"':''}><title>${n.w}: ${n.ld}</title></circle>`;
+if(bad||g==='trampa')h+=`<text x="${cx}" y="${cy+(i%2?-11:19)}" text-anchor="middle" font-size="11" fill="var(--ink)">${n.w}</text>`})});
+h+=`<text x="40" y="292" font-size="12" fill="var(--mut)">← prefiere «nuevo»</text><text x="560" y="292" text-anchor="end" font-size="12" fill="var(--mut)">prefiere «nueva» →</text>`;$('beh').innerHTML=h;
+const er=N.filter(n=>!ok(n)),tr=N.filter(n=>n.grp==='trampa'),mf=mean(N.filter(n=>n.g==='f').map(n=>n.ld)),mm=mean(N.filter(n=>n.g==='m').map(n=>-n.ld));
+$('bcap').textContent=`Acierta ${N.length-er.length} de ${N.length}. Con las ${tr.length} palabras trampa, donde el sufijo engaña, acierta ${tr.filter(ok).length}: no se guía solo por la terminación. Sus fallos (rodeados) son ${er.map(n=>n.w).join(', ')}: femeninos que se le escapan al masculino. Los masculinos los decide con más margen (${mm.toFixed(1)} de media frente a ${mf.toFixed(1)}), lo que sugiere que el masculino es su opción por defecto.`}
+function patch(){const l=+$('ly').value,y=v=>200-v*160,pts=P.map((p,i)=>`${xL(i)},${y(p.n)}`).join(' ');
+let h=`<polygon points="${xL(0)},200 ${pts} ${xL(NL-1)},200" fill="var(--acc)" opacity=".9"/><polygon points="${pts} ${xL(NL-1)},40 ${xL(0)},40" fill="var(--amb)" opacity=".9"/><text x="${xL(1)}" y="125" font-size="13" fill="var(--bg)">en el sustantivo</text><text x="${xL(NL-2)}" y="125" text-anchor="end" font-size="13" fill="var(--bg)">en la última palabra («es»)</text>`;
+[0,7,14,21,27].forEach(k=>h+=`<text x="${xL(k)}" y="220" text-anchor="middle" font-size="11" fill="var(--mut)">${k}</text>`);
+h+=`<line x1="${xL(l)}" x2="${xL(l)}" y1="34" y2="206" stroke="var(--ink)" stroke-width="2"/><text x="${xL(l)}" y="30" text-anchor="middle" font-size="12" fill="var(--ink)">capa ${l}</text>`;$('pt').innerHTML=h;$('lv').textContent=l;
+$('pn').innerHTML=`Tras la capa ${l}, el <b>${pc(P[l].n)} %</b> de la decisión sigue en el sustantivo y el <b>${pc(P[l].e)} %</b> ya está en la última palabra.`}
+$('ly').oninput=patch;
+$('pcap').textContent=`Hasta la capa ${full} la decisión vive entera en el sustantivo. De la ${full+1} a la ${jump-1} se va copiando poco a poco a la última palabra (llega al ${pc(P[jump-1].e)} %). En la capa ${jump} ocurre el traspaso grande, hasta el ${pc(P[jump].e)} %, y en la ${done} ya está todo. Calculado con ${D.n_pairs} pares de frases.`;
+function probe(){const S=[['regular','var(--acc)','regulares nuevas'],['trampa','var(--amb)','trampa'],['sin sufijo','var(--mut)','sin sufijo']],y=a=>190-a*150,
+avg=D.probe.regular.map((_,l)=>mean(S.map(s=>D.probe[s[0]][l]))),pk=avg.indexOf(Math.max(...avg));
+let h=[0,.5,1].map(v=>`<line x1="50" x2="570" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"${v===.5?' stroke-dasharray="4 4"':''}/><text x="44" y="${y(v)}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="var(--mut)">${v*100} %</text>`).join('');
+S.forEach(([k,c])=>h+=`<polyline fill="none" stroke="${c}" stroke-width="2" points="${D.probe[k].map((a,l)=>xL(l)+','+y(a)).join(' ')}"/>`);
+h+=`<line x1="${xL(pk)}" x2="${xL(pk)}" y1="32" y2="190" stroke="var(--ink)" stroke-dasharray="3 3"/><text x="${xL(pk)}" y="26" text-anchor="middle" font-size="11" fill="var(--ink)">capa ${pk}</text>`;
+[0,7,14,21,27].forEach(l=>h+=`<text x="${xL(l)}" y="208" text-anchor="middle" font-size="11" fill="var(--mut)">${l}</text>`);
+S.forEach(([k,c,t],i)=>h+=`<line x1="${60+i*170}" x2="${84+i*170}" y1="232" y2="232" stroke="${c}" stroke-width="3"/><text x="${90+i*170}" y="236" font-size="12" fill="var(--mut)">${t}</text>`);$('pb').innerHTML=h;
+const nr=N.filter(n=>n.grp==='regular').length;
+$('bpcap').textContent=`Entrenado solo con palabras regulares, el clasificador llega a su mejor momento en la capa ${pk}: acierta ${pc(D.probe.regular[pk])} % en regulares nuevas, ${pc(D.probe.trampa[pk])} % en trampas y ${pc(D.probe['sin sufijo'][pk])} % en palabras sin sufijo. Es justo antes del traspaso de la capa ${jump}. Pero los conjuntos de prueba son diminutos (${nr-Math.floor(nr*.7)}, ${N.filter(n=>n.grp==='trampa').length} y ${N.filter(n=>n.grp==='sin sufijo').length} palabras) y las curvas son ruidosas: es una pista, no una prueba.`}
+behav();patch();probe();
+</script></body></html>

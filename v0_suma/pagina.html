@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Una mente que aprendió a sumar · Atlas de la Mente</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap">
+<style>
+:root{--bg:#EDF0F7;--ink:#161C36;--mut:#5E668A;--line:#C3C9DE;--acc:#4A3FD6;--amb:#B87A00;--card:#F7F8FC;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1325;--ink:#E7EAF7;--mut:#98A0C4;--line:#2B3560;--acc:#9A92FF;--amb:#F2B83B;--card:#151C35;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1325;--ink:#E7EAF7;--mut:#98A0C4;--line:#2B3560;--acc:#9A92FF;--amb:#F2B83B;--card:#151C35;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px);background:var(--bg)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:44rem;margin:0 auto;padding:1.25rem 1.25rem 4rem}
+h1,h2,.brand{font-family:Fraunces,Georgia,"Times New Roman",serif;font-weight:700;line-height:1.15}
+.brand{font-size:1rem;color:var(--mut);font-weight:500}
+h1{font-size:clamp(2.1rem,7vw,3.2rem);margin:.6rem 0 1rem;letter-spacing:-.01em}
+h2{font-size:1.5rem;margin:2.6rem 0 .5rem}
+.lead{font-size:1.1rem;max-width:38rem}
+p{max-width:38rem}.mut{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1rem 1.1rem;margin:1.4rem 0}
+label{display:block;margin:.3rem 0 .6rem}
+input[type=range]{width:100%;accent-color:var(--acc)}
+button{font:inherit;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:.2rem .65rem;margin:0 .3rem .3rem 0;cursor:pointer}
+button[aria-pressed=true]{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+svg{display:block;width:100%;height:auto}
+#circ{max-width:380px;margin:.4rem auto}
+text{font-family:system-ui,sans-serif}
+.foot{border-top:1px solid var(--line);margin-top:3rem;padding-top:1rem;color:var(--mut);font-size:.95rem}
+</style></head><body><main>
+<div class="brand">Atlas de la Mente</div>
+<h1>Una mente que aprendió a sumar</h1>
+<p class="lead">Una red diminuta, de 128 neuronas, aprendió sola a sumar módulo 43: sumar en un reloj de 43 horas, donde 40 + 6 da 3. Nadie le explicó cómo. Esto es lo que inventó, leído desde dentro.</p>
+<section class="card" aria-label="Explorador">
+<label>Primer número: <b id="va"></b><input id="a" type="range" min="0" max="42" value="17"></label>
+<label>Segundo número: <b id="vb"></b><input id="b" type="range" min="0" max="42" value="31"></label>
+<div>Onda que miras: <span id="ks"></span></div>
+<svg id="circ" viewBox="0 0 360 360" role="img" aria-label="Los 43 números colocados en un círculo"></svg>
+<p id="out" aria-live="polite"></p>
+</section>
+<p class="mut">La red coloca cada número en un círculo; la onda elegida marca cuántas vueltas da al contar de 0 a 42. Sumar dos números es sumar sus ángulos, es decir, girar. Cambia las barras y las ondas: el punto ámbar siempre cae donde toca.</p>
+<h2>Cómo lo aprendió</h2>
+<svg id="curve" viewBox="0 0 600 240" role="img" aria-label="Aciertos durante el entrenamiento"></svg>
+<p id="ccap"></p>
+<h2>Qué hay dentro</h2>
+<svg id="spec" viewBox="0 0 600 200" role="img" aria-label="Energía de cada onda en la memoria de la red"></svg>
+<p id="scap"></p>
+<h2>La prueba</h2>
+<p>No hemos entendido cada neurona. Pero con esas ondas se puede escribir un algoritmo corto, y esa es la comprobación: que acierte lo mismo que la red, suma por suma.</p>
+<button id="chk">Comprobar las 1849 sumas</button>
+<p id="res" aria-live="polite"></p>
+<p class="foot">Este resultado ya era conocido en la investigación sobre interpretabilidad. Lo reproducimos a propósito: es el primer ladrillo, para aprender el método con una mente que sabemos leer. El siguiente paso es una mente más grande.</p>
+</main>
+<script>
+const D={"p": 43, "curve": [[200, 1.0, 0.0], [400, 1.0, 0.0], [600, 1.0, 0.0048], [800, 1.0, 0.0276], [1000, 1.0, 0.0984], [1200, 1.0, 0.2473], [1400, 1.0, 0.3974], [1600, 1.0, 0.6038], [1800, 1.0, 0.8031], [2000, 1.0, 0.9304], [2200, 1.0, 0.9832], [2400, 1.0, 0.9964], [2600, 1.0, 0.9988], [2800, 1.0, 0.9988], [3000, 1.0, 1.0], [3200, 1.0, 1.0], [3400, 1.0, 1.0], [3600, 1.0, 1.0], [3800, 1.0, 1.0], [4000, 1.0, 1.0], [4200, 1.0, 1.0], [4400, 1.0, 1.0], [4600, 1.0, 1.0], [4800, 1.0, 1.0], [5000, 1.0, 1.0], [5200, 1.0, 1.0], [5400, 1.0, 1.0], [5600, 1.0, 1.0], [5800, 1.0, 1.0], [6000, 1.0, 1.0], [6200, 1.0, 1.0], [6400, 1.0, 1.0], [6600, 1.0, 1.0], [6800, 1.0, 1.0], [7000, 1.0, 1.0], [7200, 1.0, 1.0], [7400, 1.0, 1.0], [7600, 1.0, 1.0], [7800, 1.0, 1.0], [8000, 1.0, 1.0], [8200, 1.0, 1.0], [8400, 1.0, 1.0], [8600, 1.0, 1.0], [8800, 1.0, 1.0], [9000, 1.0, 1.0], [9200, 1.0, 1.0], [9400, 1.0, 1.0], [9600, 1.0, 1.0], [9800, 1.0, 1.0], [10000, 1.0, 1.0], [10200, 1.0, 1.0], [10400, 1.0, 1.0], [10600, 1.0, 1.0], [10800, 1.0, 1.0], [11000, 1.0, 1.0], [11200, 1.0, 1.0], [11400, 1.0, 1.0], [11600, 1.0, 1.0], [11800, 1.0, 1.0], [12000, 1.0, 1.0]], "spec": [0.1611, 0.0016, 0.1609, 0.0035, 0.0028, 0.0029, 0.1257, 0.0019, 0.1352, 0.0017, 0.0831, 0.0031, 0.002, 0.1333, 0.0021, 0.005, 0.0024, 0.0018, 0.1625, 0.0033, 0.0043], "keys": [1, 3, 7, 9, 11, 14], "pred": "0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ023456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ013456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ012456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ012356789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ012346789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ012345789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ012345689:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ012345679:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ012345678:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:;=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:;<>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:;<=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:;<=>@ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:;<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:;<=>?@BCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:;<=>?@ACDEFGHIJKLMNOPQRSTUVWXYZ0123456789:;<=>?@ABDEFGHIJKLMNOPQRSTUVWXYZ0123456789:;<=>?@ABCEFGHIJKLMNOPQRSTUVWXYZ0123456789:;<=>?@ABCDFGHIJKLMNOPQRSTUVWXYZ0123456789:;<=>?@ABCDEGHIJKLMNOPQRSTUVWXYZ0123456789:;<=>?@ABCDEFHIJKLMNOPQRSTUVWXYZ0123456789:;<=>?@ABCDEFGIJKLMNOPQRSTUVWXYZ0123456789:;<=>?@ABCDEFGHJKLMNOPQRSTUVWXYZ0123456789:;<=>?@ABCDEFGHIKLMNOPQRSTUVWXYZ0123456789:;<=>?@ABCDEFGHIJLMNOPQRSTUVWXYZ0123456789:;<=>?@ABCDEFGHIJKMNOPQRSTUVWXYZ0123456789:;<=>?@ABCDEFGHIJKLNOPQRSTUVWXYZ0123456789:;<=>?@ABCDEFGHIJKLMOPQRSTUVWXYZ0123456789:;<=>?@ABCDEFGHIJKLMNPQRSTUVWXYZ0123456789:;<=>?@ABCDEFGHIJKLMNOQRSTUVWXYZ0123456789:;<=>?@ABCDEFGHIJKLMNOPRSTUVWXYZ0123456789:;<=>?@ABCDEFGHIJKLMNOPQSTUVWXYZ0123456789:;<=>?@ABCDEFGHIJKLMNOPQRTUVWXYZ0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSUVWXYZ0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTVWXYZ0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUWXYZ0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVXYZ0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWYZ0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXZ0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXY", "mask": "0010010010001101010111011110100110001110111010111100011110001000100111101010010011001101011111001111110101101101001001101010101000110001110001101101011001010011101111101010010001001011001011001111101111010010111011000000111101100001001011100010110000010101001001001100111001100111111111000101101011010000110000000000001101011111011010011101101001101010111011111001111001010111000011100111110100011100101001110110000111111111001111001101111010011010111010100100101110001111001111111110111000010101011010000110000001111101101110011111000000010001010010111001111001101001011010011100101110100111011111011101001010111011001110101101110001111110111110101101101101111101110100011110110000011010110100101010001001001001011101001110111111000110010100101000010001010010011101110100000010000011001101111110111101011101110011001001100000001111100001100101100110110011011101001100101010100110101110001010111101110011101001011110001100101110011000110100011011011110110011001101101000110010011110110010110100101010101110110001111010001000011011111000101000101001011110110101110100100110011111111010011110001111001011010110101000101111101101010111010111011111110000110000010000001110101110110100111011110110100101110000000001000101001100010100111010011010101111111101011011100010110111110101010010010111101101100110111001001000000111001110011011111111011100000101010111110011011010010011101101011011100101111011001110011100101111110110011101101101100111010111111100100011011101011011010111111001110110101001100111111101111111010000000001100010000011011001000100101101001101110101110110100010010100001001110111011001100001101000110000100001011110100100010111101110010011001111101110101111111110100101001011110101111000101001001100111110110100110001011110001100001111001110001000110010010000111001101011111001101001110010100110111111001011111010001111111101011000101", "net_acc": 1.0, "net_test": 1.0, "alg_acc": 1.0, "agree": 1.0, "share": 0.7993188277045378},p=D.p,K=D.keys,TAU=2*Math.PI,$=i=>document.getElementById(i);
+const net=(a,b)=>D.pred.charCodeAt(a*p+b)-48;
+const alg=(a,b)=>{let r=0,m=-1e9;for(let c=0;c<p;c++){let s=0;for(const k of K)s+=Math.cos(TAU*k*(a+b-c)/p);if(s>m+1e-9){m=s;r=c}}return r};
+let k=K[0];
+K.forEach(f=>{const x=document.createElement('button');x.textContent=f;x.setAttribute('aria-pressed',f===k);x.onclick=()=>{k=f;[...$('ks').children].forEach(c=>c.setAttribute('aria-pressed',c===x));draw()};$('ks').append(x)});
+const pos=(n,r)=>{const t=TAU*k*n/p-Math.PI/2;return[180+r*Math.cos(t),180+r*Math.sin(t)]};
+function draw(){
+const a=+$('a').value,b=+$('b').value,s=(a+b)%p,c=net(a,b),g=alg(a,b);
+$('va').textContent=a;$('vb').textContent=b;let h='';
+for(let n=0;n<p;n++){const[x,y]=pos(n,140);h+=`<circle cx="${x}" cy="${y}" r="2.5" fill="var(--line)"/>`}
+const L=(n,col,w)=>{const[x,y]=pos(n,140);return `<line x1="180" y1="180" x2="${x}" y2="${y}" stroke="${col}" stroke-width="${w}"/>`};
+const P=(n,col,t)=>{const[x,y]=pos(n,140),[u,v]=pos(n,162);return `<circle cx="${x}" cy="${y}" r="7" fill="${col}"/><text x="${u}" y="${v}" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="var(--ink)">${t}</text>`};
+h+=L(a,'var(--acc)',2)+L(b,'var(--acc)',2)+L(s,'var(--amb)',3)+P(a,'var(--acc)','a')+P(b,'var(--acc)','b')+P(s,'var(--amb)','a+b');
+$('circ').innerHTML=h;
+$('out').innerHTML=`<b>${a} + ${b} = ${s}</b> (módulo ${p}).<br>La red responde <b style="color:var(--amb)">${c}</b>. El algoritmo de ondas responde <b style="color:var(--amb)">${g}</b>.<br>Esta suma ${D.mask[a*p+b]==='1'?'estaba':'<b>no</b> estaba'} entre las que vio al entrenar.`}
+function curve(){const T=D.curve[D.curve.length-1][0],X=t=>50+t/T*530,Y=v=>190-v*150;let h='';
+[0,.5,1].forEach(v=>h+=`<line x1="50" x2="580" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="44" y="${Y(v)}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="var(--mut)">${v*100} %</text>`);
+const pl=(i,col,d)=>`<polyline fill="none" stroke="${col}" stroke-width="2.5" ${d?'stroke-dasharray="6 4"':''} points="${D.curve.map(r=>X(r[0])+','+Y(r[i])).join(' ')}"/>`;
+h+=pl(1,'var(--mut)',0)+pl(2,'var(--acc)',1);
+[0,T/2,T].forEach(t=>h+=`<text x="${X(t)}" y="208" text-anchor="middle" font-size="11" fill="var(--mut)">${Math.round(t)}</text>`);
+h+=`<text x="315" y="226" text-anchor="middle" font-size="12" fill="var(--mut)">pasos de entrenamiento</text><text x="58" y="${Y(1)-8}" font-size="12" fill="var(--mut)">sumas que estudió (línea)</text><text x="58" y="${Y(.5)+22}" font-size="12" fill="var(--acc)">sumas que nunca vio (guiones)</text>`;
+$('curve').innerHTML=h;
+const f=i=>(D.curve.find(r=>r[i]>=.99)||[0])[0];
+$('ccap').textContent=`Solo pudo estudiar el 55 % de las sumas posibles. Acertó el 99 % de esas hacia el paso ${f(1)} y el 99 % de las que nunca había visto hacia el paso ${f(2)}.`}
+function spec(){const m=Math.max(...D.spec);let h='';
+D.spec.forEach((v,i)=>{const hh=v/m*150,key=K.includes(i+1);h+=`<rect x="${22+i*27}" y="${165-hh}" width="20" height="${hh}" rx="2" fill="${key?'var(--amb)':'var(--line)'}"/><text x="${32+i*27}" y="184" text-anchor="middle" font-size="11" fill="var(--mut)">${i+1}</text>`});
+$('spec').innerHTML=h;
+$('scap').textContent=`Cada barra es una onda. El ${Math.round(D.share*100)} % de lo que la red guarda sobre cada número está en solo ${K.length} de las ${D.spec.length} ondas posibles (en ámbar): ${K.join(', ')}. El resto es ruido sobrante.`}
+$('chk').onclick=()=>{let u=0,w=0,n=0;for(let a=0;a<p;a++)for(let b=0;b<p;b++){const g=alg(a,b);if(g===(a+b)%p)u++;if(g===net(a,b))w++;if(net(a,b)===(a+b)%p)n++}
+$('res').innerHTML=`La red acierta <b>${n}</b> de ${p*p}. El algoritmo de ${K.length} ondas acierta <b>${u}</b> y coincide con la red en <b>${w}</b>.`};
+$('a').oninput=$('b').oninput=draw;draw();curve();spec();
+</script></body></html>

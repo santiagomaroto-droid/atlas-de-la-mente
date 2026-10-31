@@ -1,0 +1,104 @@
+import os, json, random
+import numpy as np, torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+
+MODEL = os.environ.get("ATLAS_MODEL", "Qwen/Qwen2.5-1.5B")   # si va lento: "Qwen/Qwen2.5-0.5B"
+MIN_GAP = float(os.environ.get("ATLAS_GAP", "1.0"))
+dev = "cuda" if torch.cuda.is_available() else "cpu"
+tok = AutoTokenizer.from_pretrained(MODEL)
+model = AutoModelForCausalLM.from_pretrained(MODEL).float().to(dev).eval()
+tok.padding_side = "left"
+if tok.pad_token is None: tok.pad_token = tok.eos_token
+
+FEM = ("casa mesa silla puerta ventana playa cama ropa carta falda plaza escuela luna taza botella sopa semana palabra "
+       "historia familia ciudad flor luz noche canción razón nube llave leche piel voz paz red ley calle carne mujer "
+       "nariz verdad mano foto moto").split()
+MASC = ("libro perro gato camino vaso cielo mundo tiempo trabajo juego puerto techo suelo pelo barco pueblo muro banco "
+        "cuaderno zapato brazo dedo amigo vecino coche río sol tren árbol pan mar lápiz país color amor papel motor "
+        "jardín avión reloj lugar nombre puente parque viaje día mapa planeta problema sistema idioma tema clima "
+        "programa poema").split()
+ADJ = [("blanca","blanco"),("roja","rojo"),("nueva","nuevo"),("vieja","viejo"),("bonita","bonito"),("pequeña","pequeño"),
+       ("alta","alto"),("larga","largo"),("buena","bueno"),("negra","negro"),("limpia","limpio"),("cerrada","cerrado")]
+
+one = lambda w: len(tok.encode(" " + w, add_special_tokens=False)) == 1
+adj = [(f, m) for f, m in ADJ if one(f) and one(m)]
+assert len(adj) >= 2, "Casi ningún adjetivo cabe en un token: prueba otro modelo"
+fem_ids = torch.tensor([tok.encode(" " + f, add_special_tokens=False)[0] for f, _ in adj], device=dev)
+masc_ids = torch.tensor([tok.encode(" " + m, add_special_tokens=False)[0] for _, m in adj], device=dev)
+
+lens = {n: len(tok(f"Mi {n} es").input_ids) for n in FEM + MASC}
+T = min(lens.values())
+words = [(n, "f") for n in FEM if lens[n] == T] + [(n, "m") for n in MASC if lens[n] == T]
+def grp(n, g):
+    if (g == "f" and n.endswith("a")) or (g == "m" and n.endswith("o")): return "regular"
+    if (g == "f" and n.endswith("o")) or (g == "m" and n.endswith("a")): return "trampa"
+    return "sin sufijo"
+ws = [w for w, _ in words]; gs = [g for _, g in words]; grps = [grp(w, g) for w, g in words]
+y = np.array([g == "f" for g in gs]); print(f"{len(ws)} sustantivos, {len(adj)} pares de adjetivos, modelo {MODEL}")
+
+def find_layers(m):
+    n = m.config.num_hidden_layers
+    for _, mod in m.named_modules():
+        if isinstance(mod, torch.nn.ModuleList) and len(mod) == n: return mod
+    raise RuntimeError("No encuentro las capas del modelo")
+layers = find_layers(model); nl = len(layers)
+enc = lambda xs: tok([f"Mi {w} es" for w in xs], return_tensors="pt").input_ids.to(dev)
+ld = lambda lg: (lg[:, fem_ids] - lg[:, masc_ids]).mean(1)   # >0: prefiere «blanca»; <0: prefiere «blanco»
+
+@torch.no_grad()
+def forward(ids, patch=None):
+    store, hs = [], []
+    for l, layer in enumerate(layers):
+        def hook(mod, inp, out, l=l):
+            h = out[0] if isinstance(out, tuple) else out
+            store.append(h.detach())
+            if patch and patch[0] == l:
+                h = h.clone(); h[:, patch[1]] = patch[2]
+                return (h,) + tuple(out[1:]) if isinstance(out, tuple) else h
+        hs.append(layer.register_forward_hook(hook))
+    try: lg = model(ids).logits[:, -1].float()
+    finally:
+        for h in hs: h.remove()
+    return lg, store
+
+# 1) Conducta: ¿acierta la concordancia?
+lg, res = forward(enc(ws)); L0 = ld(lg).cpu().numpy(); okb = ((L0 > 0) == y)
+beh = {k: float(okb[[i for i, x in enumerate(grps) if x == k]].mean()) for k in sorted(set(grps))}; beh["todo"] = float(okb.mean())
+nouns = [dict(w=w, g=g, grp=r, ld=round(float(v), 2)) for w, g, r, v in zip(ws, gs, grps, L0)]
+print("Acierto:", {k: round(v, 2) for k, v in beh.items()})
+
+# 2) Parcheo causal: ¿dónde vive el género? (capa x posición: «Mi», sustantivo, «es»)
+pos = [T - 3, T - 2, T - 1]; rg = random.Random(0)
+F = [w for w, g in words if g == "f"]; M = [w for w, g in words if g == "m"]; rg.shuffle(F); rg.shuffle(M); n = min(len(F), len(M)); F, M = F[:n], M[:n]
+acc = np.zeros((nl, 3)); cnt = np.zeros((nl, 3))
+for cw, kw, cfem in [(F, M, True), (M, F, False)]:
+    ic, ik = enc(cw), enc(kw); lc, rc = forward(ic); lk, _ = forward(ik); dc, dk = ld(lc), ld(lk)
+    good = ((dc > 0) == cfem) & ((dk > 0) != cfem) & ((dc - dk).abs() > MIN_GAP)
+    if int(good.sum()) == 0: continue
+    for l in range(nl):
+        for pi, p in enumerate(pos):
+            lp, _ = forward(ik, (l, p, rc[l][:, p])); r = ((ld(lp) - dk) / (dc - dk))[good]
+            acc[l, pi] += r.sum().item(); cnt[l, pi] += int(good.sum())
+patch = (acc / np.maximum(cnt, 1)).round(3).tolist(); print("Pares válidos para el parcheo:", int(cnt[0, 0]))
+
+# 3) Sondas: ¿en qué capa se puede leer el género en la posición del sustantivo?
+# Se entrena solo con sustantivos regulares (-a femenino, -o masculino) y se prueba con regulares nuevos,
+# con «trampas» (mano, día...) y con sustantivos sin sufijo marcado.
+reg = [i for i, r in enumerate(grps) if r == "regular"]; rs = np.random.RandomState(0); rs.shuffle(reg); k = int(len(reg) * .7)
+tr, te = reg[:k], reg[k:]
+sets = {"regular": te, "trampa": [i for i, r in enumerate(grps) if r == "trampa"], "sin sufijo": [i for i, r in enumerate(grps) if r == "sin sufijo"]}
+yy = y.astype(int); probe = {k_: [] for k_ in sets}
+for l in range(nl):
+    X = res[l][:, T - 2].float().cpu().numpy(); sc = StandardScaler().fit(X[tr])
+    clf = LogisticRegression(max_iter=3000, C=0.05).fit(sc.transform(X[tr]), yy[tr])
+    for k_, idx in sets.items():
+        probe[k_].append(round(float((clf.predict(sc.transform(X[idx])) == yy[idx]).mean()), 3) if idx else None)
+
+out = dict(model=MODEL, layers=nl, pos=["Mi", "sustantivo", "es"], adj=adj, n_pairs=int(cnt[0, 0]), beh=beh, nouns=nouns, patch=patch, probe=probe)
+js = json.dumps(out, ensure_ascii=False, separators=(",", ":")); open("atlas_v2.json", "w", encoding="utf-8").write(js)
+print("\nListo. Se ha guardado atlas_v2.json. Si no puedes subir el archivo, copia esta línea entera:\n" + js)
+try:
+    from google.colab import files; files.download("atlas_v2.json")
+except Exception: pass
