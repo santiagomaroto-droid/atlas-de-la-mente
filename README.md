@@ -30,7 +30,15 @@ Licencia: MIT (ver LICENSE). Autoría: Santiago, con ayuda de Claude (Anthropic)
 Nota técnica: NOTA.md
 
 [v0: una mente que aprende a sumar](https://santiagomaroto-droid.github.io/atlas-de-la-mente/v0_suma/pagina.html)
+
+
 [v1: una mente que aprende de lo que le dices](https://santiagomaroto-droid.github.io/atlas-de-la-mente/v1_induccion/pagina.html)
+
+
 [v2: cómo decide una IA real si va «blanca» o «blanco»](https://santiagomaroto-droid.github.io/atlas-de-la-mente/v2_genero_qwen/pagina.html)
+
+
 [v3: dos IAs, dos maneras de decidir el género](https://santiagomaroto-droid.github.io/atlas-de-la-mente/v3_dos_modelos/pagina.html)
+
+
 [v4: ¿son imprescindibles esas cabezas?](https://santiagomaroto-droid.github.io/atlas-de-la-mente/v4_cabezas_imprescindibles/pagina.html)
