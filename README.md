@@ -25,4 +25,6 @@ En Qwen2.5-1.5B y Qwen2.5-0.5B, el género del sustantivo llega a la última pal
 Tres modelos (dos de la misma familia), una plantilla base, ablación solo en la última palabra y sin análisis de los patrones de atención. Falta repetirlo en más familias y fenómenos.
 
 ## Licencia y autoría
-Por decidir por quien publique el proyecto. Sugerencia: MIT para el código y CC BY 4.0 para textos y datos. Autoría: por decidir.
+Por decidir por quien publique el proyecto. Sugerencia: MIT para el código y CC BY 4.0 para textos y datos. Santiago, escrito con ayuda de Claude (Anthropic)
+
+Nota técnica: NOTA.md
