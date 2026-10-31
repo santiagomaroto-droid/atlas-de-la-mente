@@ -28,3 +28,9 @@ Tres modelos (dos de la misma familia), una plantilla base, ablación solo en la
 Por decidir por quien publique el proyecto. Sugerencia: MIT para el código y CC BY 4.0 para textos y datos. Santiago, escrito con ayuda de Claude (Anthropic)
 
 Nota técnica: NOTA.md
+
+/v0_suma/pagina.html
+/v1_induccion/pagina.html
+/v2_genero_qwen/pagina.html
+/v3_dos_modelos/pagina.html
+/v4_cabezas_imprescindibles/pagina.html
