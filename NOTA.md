@@ -1,6 +1,6 @@
 # Cómo deciden dos familias de modelos el género de «Mi casa es…»
 
-*Nota técnica preliminar del Atlas de la Mente. Autoría: por decidir. Escrita con ayuda de Claude (Anthropic). Estado: exploratorio, sin revisión externa.*
+*Nota técnica preliminar del Atlas de la Mente. Santiago, escrita con ayuda de Claude (Anthropic). Estado: exploratorio, sin revisión externa.*
 
 ## Resumen
 
