@@ -30,7 +30,15 @@ Por decidir por quien publique el proyecto. Sugerencia: MIT para el código y CC
 Nota técnica: NOTA.md
 
 /v0_suma/pagina.html
+
+
 /v1_induccion/pagina.html
+
+
 /v2_genero_qwen/pagina.html
+
+
 /v3_dos_modelos/pagina.html
+
+
 /v4_cabezas_imprescindibles/pagina.html
